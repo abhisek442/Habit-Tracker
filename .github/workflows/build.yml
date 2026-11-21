@@ -32,7 +32,7 @@ jobs:
             done
           done
           sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.VIBRATE"/></manifest>#' android/app/src/main/AndroidManifest.xml
-         VC=$((1000 + ${{ github.run_number }}))
+          VC=$((1000 + ${{ github.run_number }}))
           sed -i "s/versionCode [0-9]*/versionCode $VC/;s/versionName \"[^\"]*\"/versionName \"1.$VC\"/" android/app/build.gradle
           npx cap sync android
           mkdir out
