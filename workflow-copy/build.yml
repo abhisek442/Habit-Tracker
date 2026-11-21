@@ -1,0 +1,115 @@
+name: Build apps (APK, EXE, IPA)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+      KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Build APK
+        run: |
+          npm install
+          npx cap add android
+          sudo apt-get install -y imagemagick
+          R=android/app/src/main/res
+          rm -rf $R/mipmap-anydpi-v26
+          for x in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            d=${x%%:*}; z=${x##*:}
+            for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              convert docs/icon-512.png -resize ${z}x${z} $R/mipmap-$d/$n.png
+            done
+          done
+          sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.VIBRATE"/></manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/;s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+          npx cap sync android
+          mkdir out
+          cd android
+          if [ -n "$KS_B64" ]; then
+            ./gradlew assembleRelease
+            BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+            echo "$KS_B64" | base64 -d > release.keystore
+            $BT/zipalign -p -f 4 app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+            $BT/apksigner sign --ks release.keystore --ks-key-alias habits --ks-pass env:KS_PASS --key-pass env:KS_PASS --out ../out/Habits.apk aligned.apk
+            rm release.keystore
+          else
+            ./gradlew assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk ../out/Habits-debug.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*.apk
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build EXE
+        shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          mkdir -p desktop/app
+          cp -R docs/. desktop/app/
+          cd desktop
+          npm install
+          npx electron-builder --win --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            desktop/dist/Habits-Setup.exe
+            desktop/dist/Habits-Portable.exe
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build IPA (unsigned)
+        run: |
+          npm install
+          npx cap add ios
+          sips -z 1024 1024 docs/icon-512.png --out ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+          npx cap sync ios
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          mkdir -p Payload out
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry out/Habits-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios
+          path: out/*.ipa
+
+  release:
+    needs: [android, windows, ios]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -R dist
+          gh release create "build-${{ github.run_number }}" dist/* --repo "${{ github.repository }}" --title "Habits build ${{ github.run_number }}" --notes "Android: Habits.apk. Windows: Habits-Setup.exe or Habits-Portable.exe. iPhone: Habits-unsigned.ipa (sideload with AltStore or Sideloadly)."

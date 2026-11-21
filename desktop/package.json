@@ -1,0 +1,5 @@
+{"name":"habits-desktop","version":"1.0.0","description":"Habits","author":"Habits","main":"main.js","devDependencies":{"electron":"^33.0.0","electron-builder":"^25.0.0"},
+"build":{"appId":"com.abhisek442.habits.desktop","productName":"Habits","directories":{"output":"dist","buildResources":"build"},"files":["main.js","app/**/*","build/icon.png"],
+"win":{"target":["nsis","portable"],"icon":"build/icon.png"},
+"nsis":{"oneClick":false,"allowToChangeInstallationDirectory":true,"artifactName":"Habits-Setup.exe"},
+"portable":{"artifactName":"Habits-Portable.exe"}}}
