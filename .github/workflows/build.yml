@@ -21,6 +21,7 @@ jobs:
       - name: Build APK
         run: |
           npm install
+          npm install @capgo/capacitor-native-biometric@^7 || echo "Biometric plugin not installed, PIN lock only"
           npx cap add android
           sudo apt-get install -y imagemagick
           R=android/app/src/main/res
@@ -31,7 +32,7 @@ jobs:
               convert docs/icon-512.png -resize ${z}x${z} $R/mipmap-$d/$n.png
             done
           done
-          sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.VIBRATE"/></manifest>#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.VIBRATE"/><uses-permission android:name="android.permission.USE_BIOMETRIC"/></manifest>#' android/app/src/main/AndroidManifest.xml
           VC=$((1000 + ${{ github.run_number }}))
           sed -i "s/versionCode [0-9]*/versionCode $VC/;s/versionName \"[^\"]*\"/versionName \"1.$VC\"/" android/app/build.gradle
           npx cap sync android
@@ -87,7 +88,9 @@ jobs:
       - name: Build IPA (unsigned)
         run: |
           npm install
+          npm install @capgo/capacitor-native-biometric@^7 || echo "Biometric plugin not installed, PIN lock only"
           npx cap add ios
+          /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string Unlock Habits" ios/App/App/Info.plist || true
           sips -z 1024 1024 docs/icon-512.png --out ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
           npx cap sync ios
           xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
