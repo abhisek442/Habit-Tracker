@@ -20,9 +20,13 @@ function createWindow() {
 
   // If the app file cannot be loaded, show why instead of a blank window.
   win.webContents.on('did-fail-load', (e, code, desc, url, isMain) => {
-    if (!isMain) return;
+    if (!isMain || url.startsWith('data:')) return;
+    const www = path.join(__dirname, 'www');
+    let info;
+    try { info = 'Folder contents: ' + fs.readdirSync(www).join(', '); } catch (x) { info = 'Folder not readable: ' + x.message; }
     win.loadURL(page('<body style="font-family:Segoe UI,sans-serif;padding:40px"><h2>Habits could not start</h2><p>' +
-      desc + ' (' + code + ')</p><p style="color:#666;word-break:break-all">' + url + '</p></body>'));
+      desc + ' (' + code + ')</p><p style="color:#666;word-break:break-all">' + url + '</p><p style="color:#666;word-break:break-all">index.html exists: ' +
+      fs.existsSync(path.join(www, 'index.html')) + '<br>' + info + '</p></body>'));
   });
   win.webContents.on('render-process-gone', () => win.reload());
 
@@ -33,7 +37,7 @@ function createWindow() {
     if (input.key === 'F5') win.reload();
   });
 
-  win.loadFile(path.join(__dirname, 'app', 'index.html'));
+  win.loadFile(path.join(__dirname, 'www', 'index.html'));
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
 }
 
