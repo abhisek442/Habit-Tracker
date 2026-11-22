@@ -17,7 +17,7 @@
     },
     "files": [
       "main.js",
-      "app/**/*",
+      "www/**/*",
       "build/icon.png"
     ],
     "win": {
@@ -40,6 +40,7 @@
     },
     "portable": {
       "artifactName": "Habits-Portable.exe"
-    }
+    },
+    "asar": false
   }
 }
