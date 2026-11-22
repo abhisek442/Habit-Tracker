@@ -66,8 +66,8 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
-          mkdir -p desktop/app
-          cp -R docs/. desktop/app/
+          mkdir -p desktop/www
+          cp -R docs/. desktop/www/
           cd desktop
           npm install
           npx electron-builder --win --x64 --publish never
