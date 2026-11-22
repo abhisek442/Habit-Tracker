@@ -9,6 +9,26 @@ if (process.argv.includes('--safe') || fs.existsSync(flag)) app.disableHardwareA
 
 function page(html) { return 'data:text/html;charset=utf-8,' + encodeURIComponent(html); }
 
+
+// Creates Desktop and Start menu shortcuts the first time the installed app runs,
+// even if the installer did not make them. It only does this once.
+function ensureShortcuts() {
+  if (process.platform !== 'win32' || !app.isPackaged || process.env.PORTABLE_EXECUTABLE_FILE) return;
+  const marker = path.join(app.getPath('userData'), 'shortcuts-created');
+  if (fs.existsSync(marker)) return;
+  const opts = { target: process.execPath, cwd: path.dirname(process.execPath), description: 'Habits',
+    icon: process.execPath, iconIndex: 0, appUserModelId: 'com.abhisek442.habits' };
+  const places = [
+    path.join(app.getPath('desktop'), 'Habits.lnk'),
+    path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Habits.lnk')
+  ];
+  let ok = false;
+  for (const p of places) {
+    try { ok = (fs.existsSync(p) ? true : shell.writeShortcutLink(p, 'create', opts)) || ok; } catch (e) {}
+  }
+  if (ok) { try { fs.mkdirSync(path.dirname(marker), { recursive: true }); fs.writeFileSync(marker, '1'); } catch (e) {} }
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1240, height: 820, minWidth: 900, minHeight: 620,
@@ -43,7 +63,7 @@ function createWindow() {
 
 app.on('child-process-gone', (e, details) => {
   if (details.type === 'GPU' && !fs.existsSync(flag)) {
-    try { fs.writeFileSync(flag, '1'); } catch (x) {}
+    try { fs.mkdirSync(path.dirname(flag), { recursive: true }); fs.writeFileSync(flag, '1'); } catch (x) {}
     app.relaunch(); app.exit(0);
   }
 });
@@ -55,6 +75,6 @@ if (!app.requestSingleInstanceLock()) {
     const w = BrowserWindow.getAllWindows()[0];
     if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
   });
-  app.whenReady().then(() => { app.setAppUserModelId('com.abhisek442.habits'); createWindow(); });
+  app.whenReady().then(() => { app.setAppUserModelId('com.abhisek442.habits'); ensureShortcuts(); createWindow(); });
   app.on('window-all-closed', () => app.quit());
 }
