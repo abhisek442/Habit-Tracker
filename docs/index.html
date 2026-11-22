@@ -221,6 +221,7 @@ nav{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 <body>
 <div id="app"><main id="v"></main>
 <nav id="nav"></nav></div>
+<script>window.addEventListener('error',function(e){if(!document.body||document.getElementById('errb'))return;var d=document.createElement('div');d.id='errb';d.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:9999;background:#fff3f3;color:#b00020;border:1px solid #f3b4b4;border-radius:12px;padding:10px 14px;font:13px system-ui,sans-serif;white-space:pre-wrap';d.textContent='Something went wrong: '+e.message+(e.lineno?' (line '+e.lineno+')':'')+'  (tap to hide)';d.onclick=function(){d.remove()};document.body.appendChild(d)})</script>
 <script>
 const $=s=>document.querySelector(s),K='habits.v1';
 const COL=['#0a84ff','#30d158','#ff9f0a','#ff375f','#bf5af2','#ffd60a','#40c8e0','#ff453a'];
