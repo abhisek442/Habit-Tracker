@@ -216,6 +216,20 @@ nav{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .obg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
 .obs{display:flex;align-items:center;gap:10px;padding:14px;border-radius:18px;border:1.5px solid var(--line);background:var(--glass);color:var(--ink);font:600 15px -apple-system,system-ui,sans-serif;text-align:left;cursor:pointer;box-shadow:var(--sh)}
 .obs span{font-size:24px}.obs.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,transparent)}
+
+.av{border-radius:50%;display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(20,30,70,.18),inset 0 1px 0 rgba(255,255,255,.6)}
+.pn{font:700 22px var(--hf);letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h2{font:800 26px var(--hf);letter-spacing:-.03em;margin:30px 4px 0}
+
+.phd{display:flex;justify-content:space-between;align-items:center;margin:14px 4px 12px}.pnm{font:800 28px var(--hf);letter-spacing:-.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gb{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--glass);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--sh);flex:none;padding:0}
+.pro{display:flex;align-items:center;gap:22px;margin:6px 4px 14px}.pav svg{box-shadow:0 8px 22px rgba(20,30,70,.2)}
+.pst{display:flex;flex:1;justify-content:space-around;text-align:center}.pst b{display:block;font:800 22px var(--hf)}.pst span{font-size:12.5px;color:var(--mute)}
+.pq{margin:0 6px 14px;font-size:15.5px;line-height:1.4}.pbtn{display:flex;gap:10px;margin-bottom:6px}.pbtn .btn{flex:1;padding:12px}
+.fwho{display:flex;align-items:center;gap:12px;min-width:0}.ft{display:flex;flex-direction:column;min-width:0}.fq{font-size:13px;color:var(--mute);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avtabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}.avtabs button{flex:none;border:0;background:var(--fill);color:var(--ink);padding:8px 14px;border-radius:14px;font:600 14px -apple-system,system-ui,sans-serif;cursor:pointer}.avtabs .on{background:var(--acc);color:#fff}
+.avopts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-height:200px;overflow:auto;padding:6px 2px}.avopts button{border:0;background:none;padding:0;cursor:pointer;border-radius:50%;line-height:0}
+.avc{width:42px;height:42px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}.avc.on,.avs.on{outline:3px solid var(--acc);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -231,8 +245,8 @@ const FN={sf:'-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe U
 let S=load(),tab=S.set.start,edit=null,off=0;
 function load(){try{const d=JSON.parse(localStorage.getItem(K));if(d&&d.habits)return fix(d)}catch(e){}
 return fix({habits:[],log:{},set:{}})}
-function fix(d){d.set=Object.assign({theme:'light',accent:COL[0],ws:1,font:'sf',dense:0,start:'today',skin:'glass',tip:1,unit:'kg',rest:90},d.set);d.cnt=d.cnt||{};d.notes=d.notes||{};d.fired=d.fired||{};d.skip=d.skip||{};d.slip=d.slip||{};if(d.set.onb===undefined)d.set.onb=!!(d.habits.length||(d.wo||[]).length);d.wo=d.wo||[];d.exs=d.exs||[];d.tpl=d.tpl||[];d.act=d.act||null;if(!d.badges&&!d.habits.length)d.badges={};return d}
-function save(){S.mod=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}clearTimeout(B);B=setTimeout(checkBadges,400);clearTimeout(T);T=setTimeout(()=>{if(A){push();pushShared()}native()},2000)}
+function fix(d){d.set=Object.assign({theme:'light',accent:COL[0],ws:1,font:'sf',dense:0,start:'today',skin:'glass',tip:1,unit:'kg',rest:90,uname:'',av:null,quote:''},d.set);d.cnt=d.cnt||{};d.notes=d.notes||{};d.fired=d.fired||{};d.skip=d.skip||{};d.slip=d.slip||{};if(d.set.onb===undefined)d.set.onb=!!(d.habits.length||(d.wo||[]).length);d.wo=d.wo||[];d.exs=d.exs||[];d.tpl=d.tpl||[];d.act=d.act||null;if(!d.badges&&!d.habits.length)d.badges={};return d}
+function save(){S.mod=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}clearTimeout(B);B=setTimeout(checkBadges,400);clearTimeout(T);T=setTimeout(()=>{if(A){if(SYNCED){push();pushShared()}else sync()}native()},2000)}
 const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const day=n=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+n);return d};
 const done=(h,k)=>h.type==='avoid'?(k<=key(new Date())&&k>=h.created&&!(S.slip[k]||[]).includes(h.id)):(h.goal||1)>1?((S.cnt[k]||{})[h.id]||0)>=h.goal:(S.log[k]||[]).includes(h.id);
@@ -248,12 +262,29 @@ async function fresh(){if(!A)return false;if(Date.now()<A.exp)return true;const 
 async function login(mode){const e=$('#em').value.trim(),p=$('#pw').value;if(!e||p.length<6){msg='Enter your email and a password of 6 or more characters.';return render()}
  $('#li').disabled=$('#su').disabled=true;
  try{const r=await api(mode==='up'?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:e,password:p})});
-  if(r.ok&&r.j.access_token){sess(r.j);msg='';await sync()}else if(r.ok)msg='Account created. Confirm your email, then log in.';else msg=(r.j&&(r.j.msg||r.j.error_description||r.j.message))||'Could not sign in.'}catch(x){msg='No connection. Try again when online.'}
+  if(r.ok&&r.j.access_token){sess(r.j);msg='';SYNCED=false;await sync();loadFriends(null,true)}else if(r.ok)msg='Account created. Confirm your email, then log in.';else msg=(r.j&&(r.j.msg||r.j.error_description||r.j.message))||'Could not sign in.'}catch(x){msg='No connection. Try again when online.'}
  render()}
-async function sync(){if(!await fresh())return;try{const g=await api('/rest/v1/backups?select=data&user_id=eq.'+A.uid,{},1);
- if(!g.ok){msg='Sync failed.';return render()}
- const rd=g.j[0]&&g.j[0].data;
- if(rd&&(rd.mod||0)>(S.mod||0)){S=fix(rd);try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}msg='Loaded from your account.'}else await push()}catch(e){msg='Offline. Will sync later.'}render()}
+const has=d=>!!d&&((d.habits||[]).length>0||(d.wo||[]).length>0||Object.keys(d.log||{}).length>0);
+const sz=d=>d?(d.habits||[]).length+Object.keys(d.log||{}).length+(d.wo||[]).length:0;
+let SYNCED=false;
+function snap(label,d){try{localStorage.setItem(K+'.prev',JSON.stringify({label,at:Date.now(),data:d}))}catch(e){}}
+function prevOf(){try{return JSON.parse(localStorage.getItem(K+'.prev'))}catch(e){return null}}
+function PV(){const p=prevOf();return p?`<button class="link" id="rvp">Restore previous data (${esc(p.label)}, ${new Date(p.at).toLocaleDateString()})</button>`:''}
+function restorePrev(){const p=prevOf();if(!p)return;ask('Restore previous data?','This replaces the data in the app with the copy saved before the last sync or erase.','Restore',()=>{S=fix(p.data);save();render();toast('Data restored')},'')}
+function takeRemote(rd){if(has(S))snap('this device',S);S=fix(rd);try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}msg='Loaded from your account.'}
+function conflict(rd){render();const o=ov(`<h3 class="at">Which data do you want?</h3><p class="am">Your account has ${(rd.habits||[]).length} habits and ${Object.keys(rd.log||{}).length} days of history. This device has ${S.habits.length} habits and ${Object.keys(S.log).length} days.</p><button class="btn" data-a>Use my account data</button><button class="btn g" data-d>Keep this device’s data</button>`);
+ o.querySelector('[data-a]').onclick=()=>{o.remove();takeRemote(rd);SYNCED=true;render()};
+ o.querySelector('[data-d]').onclick=async()=>{o.remove();snap('account copy',rd);SYNCED=true;await push();render()}}
+async function sync(){if(!await fresh())return;
+ try{const g=await api('/rest/v1/backups?select=data&user_id=eq.'+A.uid,{},1);
+  if(!g.ok){msg='Sync failed.';return render()}
+  const rd=g.j[0]&&g.j[0].data;
+  if(rd&&has(rd)){
+   if(!has(S)||(rd.mod||0)>(S.mod||0))takeRemote(rd);
+   else if((rd.mod||0)<(S.mod||0)&&sz(rd)>sz(S)){conflict(rd);return}
+   else await push()
+  }else await push();
+  SYNCED=true}catch(e){msg='Offline. Will sync later.'}render()}
 async function push(){if(!await fresh())return;try{const r=await api('/rest/v1/backups?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:A.uid,data:S})},1);msg=r.ok?'Synced at '+new Date().toLocaleTimeString():'Sync failed.'}catch(e){msg='Offline. Will sync later.'}}
 function acct(){const m=msg?`<div class="hint" style="padding:0 16px 12px">${esc(msg)}</div>`:'';
  if(A)return`<div class="sec">Account</div><div class="grp"><div class="frow"><div><div class="lb">${esc(A.email)}</div><div class="hint">Signed in. Your habits sync to your account.</div></div></div>${m}<button class="link" id="sy">Sync now</button><button class="link red" id="lo">Log out</button></div>`;
@@ -274,7 +305,7 @@ function xpInfo(){let n=0,best=0,perfect=false,goalDone=false;const ks=new Set([
  S.habits.forEach(h=>{ks.forEach(k=>{if(h.type!=='avoid'&&done(h,k)){n++;if((h.goal||1)>1)goalDone=true}});best=Math.max(best,streak(h)[1])});
  ks.forEach(k=>{const d=new Date(k+'T12:00:00'),hs=S.habits.filter(h=>sched(h,d));if(hs.length&&hs.every(h=>done(h,k)))perfect=true});
  const wn=S.wo.length,xp=n*10+wn*30,lv=Math.floor(Math.sqrt(xp/50))+1;return{n,best,wn,perfect,goalDone,xp,lv,cur:50*(lv-1)**2,nxt:50*lv**2,rest:Object.keys(S.skip).length>0}}
-function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
+function toast(t){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
 function checkBadges(){const i=xpInfo(),first=!S.badges;S.badges=S.badges||{};const nw=[];
  BG.forEach(b=>{if(b[4](i)&&!S.badges[b[0]]){S.badges[b[0]]=key(new Date());nw.push(['Badge unlocked: '+b[2],b[1]])}});
  const L=S.lvl||0;if(i.lv>L){S.lvl=i.lv;if(L&&!first)nw.push(['Level '+i.lv+': '+LV[Math.min(i.lv-1,LV.length-1)],'⬆️'])}
@@ -458,37 +489,91 @@ async function pushShared(){if(!A)return;const hs=S.habits.filter(h=>h.share);if
  await fReq('/rest/v1/shared?user_id=eq.'+A.uid,{method:'DELETE'});
  if(hs.length)await fReq('/rest/v1/shared',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(hs.map(h=>{const r=streak(h);return{user_id:A.uid,habit_id:h.id,name:h.name,emoji:h.emoji,color:h.color,type:h.type||'build',streak:r[0],best:r[1],done_today:done(h,t)}}))});
  S.hadShare=hs.length>0}
-async function loadFriends(){if(!A){FD={err:'login'};return render()}FD={busy:1};render();
- let r=await fReq('/rest/v1/profiles?select=code,name&user_id=eq.'+A.uid);
- if(r.ok&&!r.j.length){for(let t=0;t<3;t++){const c=rcode(),nm='Friend '+c.slice(0,3),w=await fReq('/rest/v1/profiles',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({user_id:A.uid,code:c,name:nm})});if(w.ok){r={ok:true,j:[{code:c,name:nm}]};break}}}
- if(!r.ok||!r.j.length){FD={err:'setup'};return render()}
- const fr=await fReq('/rest/v1/friends?select=a,b,status'),rows=fr.ok?fr.j:[],ids=[...new Set(rows.flatMap(x=>[x.a,x.b]).filter(x=>x!==A.uid))],names={};let sh=[];
- if(ids.length){const l='('+ids.join(',')+')',p=await fReq('/rest/v1/profiles?select=user_id,name&user_id=in.'+l);if(p.ok)p.j.forEach(x=>names[x.user_id]=x.name);const s2=await fReq('/rest/v1/shared?select=*&user_id=in.'+l);if(s2.ok)sh=s2.j}
- FD={me:r.j[0],rows,names,sh};render()}
-function friendsView(){const d=FD,head=`<p class="sub" style="margin:8px 4px 0"><a data-fb="1">‹ Settings</a> &nbsp;&nbsp; <a data-fr="1">Refresh</a></p><h1>Friends</h1><p class="sub">Share a habit and cheer each other on.</p>`,box=(t,m)=>head+`<div class="grp"><div class="frow" style="display:block"><div class="lb">${t}</div><div class="hint">${m}</div></div></div>`;
- if(!A)return box('Log in to use friends','Open Settings and log in or sign up first.');
- if(!d||d.busy)return head+'<div class="empty">Loading…</div>';
- if(d.err==='setup')return box('Friends are not set up yet','Run the friends SQL once in Supabase (see the README), then reopen this page.');
- const me=A.uid,inc=d.rows.filter(x=>x.b===me&&x.status==='pending'),acc=d.rows.filter(x=>x.status==='accepted'),out=d.rows.filter(x=>x.a===me&&x.status==='pending'),nm=id=>esc(d.names[id]||'Friend');
- return head+`<div class="sec">Your code</div><div class="grp"><div class="frow"><div><div class="lb" style="letter-spacing:.14em;font-weight:700">${d.me.code}</div><div class="hint">Give this to a friend so they can add you.</div></div><button class="btn g" data-cc style="padding:10px 14px;font-size:15px">Copy</button></div></div>
- <div class="sec">Your name</div><div class="grp"><div class="frow"><input type="text" id="fname" maxlength="20" value="${esc(d.me.name)}"><button class="btn g" data-sn style="padding:11px 16px">Save</button></div></div>
- <div class="sec">Add a friend</div><div class="grp"><div class="frow"><input type="text" id="fcode" maxlength="8" placeholder="Friend code" style="text-transform:uppercase;letter-spacing:.1em"><button class="btn" data-fa style="padding:11px 16px">Add</button></div></div>
- ${inc.length?`<div class="sec">Requests</div><div class="grp">${inc.map(x=>`<div class="frow"><span class="lb">${nm(x.a)}</span><span><a data-ok="${x.a}">Accept</a> &nbsp; <a data-no="${x.a}" style="color:#ff3b30">Decline</a></span></div>`).join('')}</div>`:''}
- <div class="sec">Friends</div>${acc.length?acc.map(x=>{const id=x.a===me?x.b:x.a,hs=d.sh.filter(s=>s.user_id===id);return`<div class="grp" style="margin-bottom:12px"><div class="frow"><span class="lb">${nm(id)}</span><a data-rf="${id}" style="color:#ff3b30">Remove</a></div>${hs.length?hs.map(s=>`<div class="frow" style="min-height:46px"><span>${esc(s.emoji||'⭐')} ${esc(s.name)}</span><span class="hint" style="margin:0">${s.type==='avoid'?'🛡️ '+s.streak+' clean':'🔥 '+s.streak}${s.done_today?' · ✓ today':''}</span></div>`).join(''):'<div class="frow"><span class="hint" style="margin:0">No shared habits yet.</span></div>'}</div>`}).join(''):'<div class="empty" style="padding:26px 10px">No friends yet. Add one with their code.</div>'}
- ${out.length?`<p class="hint" style="margin:8px 16px">Waiting for ${out.map(x=>nm(x.b)).join(', ')} to accept.</p>`:''}
+let SV=false;
+const SKIN=['#ffdfc4','#f5c9a0','#e0a878','#c68642','#8d5524','#5c3a21'],HAIRC=['#1e1410','#4a2c17','#8b5a2b','#d9a441','#c0451d','#9aa0a6','#3b6fd8','#e0558a'],OUTC=['#0a84ff','#30d158','#ff9f0a','#ff375f','#bf5af2','#40c8e0','#1c1c1e','#f2f2f7'],BGC=['#cfe8ff','#d9f6e4','#ffe6c7','#ffd3df','#ead9ff','#d2f3f8','#ffe9a8','#e5e5ea'];
+const AV0={s:1,h:2,hc:1,e:0,m:0,g:0,b:0,t:0,bg:0};
+function shade(h,f){const n=parseInt(h.slice(1),16),r=n>>16,g=n>>8&255,b=n&255,k=x=>Math.max(0,Math.min(255,Math.round(x*(1+f))));return'#'+[k(r),k(g),k(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function hairL(h,c){const cap=`<path d="M28.5 44c-1-17 8-27 21.5-27s22.5 10 21.5 27c-3-9-9-14-14-15-5 2-15 2-20 0-5 1-11 6-14 15z" fill="${c}"/>`;
+ return[['',''],['',`<path d="M29.5 42c0-14 8-22 20.5-22s20.5 8 20.5 22c-4-7-11-10-20.5-10s-16.5 3-20.5 10z" fill="${c}"/>`],['',cap],['',`<path d="M28 46c-2-19 8-29 22-29s23 9 21 29c-1-6-3-10-6-12-8 2-20 0-28-8-4 5-8 10-9 20z" fill="${c}"/>`],[`<path d="M26 40c0-18 10-26 24-26s24 8 24 26v32H26z" fill="${c}"/>`,cap],[`<g fill="${c}"><circle cx="30" cy="34" r="9"/><circle cx="40" cy="24" r="10"/><circle cx="52" cy="21" r="10"/><circle cx="63" cy="25" r="10"/><circle cx="71" cy="36" r="9"/></g>`,cap],[`<circle cx="50" cy="12" r="8" fill="${c}"/>`,cap],[`<path d="M70 28c10 2 14 14 8 28-2-8-4-12-8-14z" fill="${c}"/>`,cap],['',`<path d="M28 44l2-16 7 8 4-18 8 14 6-16 5 16 8-8 3 20c-3-8-9-13-14-14-5 2-15 2-20 0-5 1-11 6-14 14z" fill="${c}"/>`],[`<circle cx="50" cy="38" r="30" fill="${c}"/>`,cap]][h]||['','']}
+const EYES=['<circle cx="41" cy="46" r="2.4" fill="#1c1c1e"/><circle cx="59" cy="46" r="2.4" fill="#1c1c1e"/>','<path d="M37.5 47q3.5-5 7 0M55.5 47q3.5-5 7 0" stroke="#1c1c1e" stroke-width="2.2" fill="none" stroke-linecap="round"/>','<circle cx="41" cy="46" r="4" fill="#fff"/><circle cx="59" cy="46" r="4" fill="#fff"/><circle cx="41.5" cy="46.5" r="2.2" fill="#1c1c1e"/><circle cx="59.5" cy="46.5" r="2.2" fill="#1c1c1e"/>','<path d="M37 46h8M55 46h8" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"/>'];
+const MOUTH=['<path d="M43 57q7 7 14 0" stroke="#1c1c1e" stroke-width="2.2" fill="none" stroke-linecap="round"/>','<path d="M42 56h16q-1 9-8 9t-8-9z" fill="#7a2330"/><path d="M43.5 56h13v3h-13z" fill="#fff"/>','<path d="M44 58h12" stroke="#1c1c1e" stroke-width="2.2" stroke-linecap="round"/>','<ellipse cx="50" cy="59" rx="4.5" ry="5" fill="#7a2330"/>'];
+const GLASS=['','<g fill="none" stroke="#1c1c1e" stroke-width="1.8"><circle cx="41" cy="46" r="6.5"/><circle cx="59" cy="46" r="6.5"/><path d="M47.5 46h5"/></g>','<g fill="none" stroke="#1c1c1e" stroke-width="1.8"><rect x="34" y="40" width="14" height="11" rx="2.5"/><rect x="52" y="40" width="14" height="11" rx="2.5"/><path d="M48 45h4"/></g>','<g fill="#1c1c1e"><rect x="33.5" y="40" width="15" height="10" rx="3"/><rect x="51.5" y="40" width="15" height="10" rx="3"/><rect x="48" y="43" width="4" height="2"/></g>'];
+const beardL=(b,c)=>['',`<path d="M41 54q9-4 18 0q-4 3-9 3t-9-3z" fill="${c}"/>`,`<path d="M29.5 50c1 17 9 24 20.5 24s19.5-7 20.5-24c-3 8-8 11-12 11-3-2-6-3-9-3s-6 1-9 3c-4 0-9-3-11-11z" fill="${c}"/>`,`<path d="M44 64q6 8 12 0q-6 3-12 0z" fill="${c}"/>`][b]||'';
+function avSvg(c,n){c={...AV0,...c};const sk=SKIN[c.s]||SKIN[1],hc=HAIRC[c.hc]||HAIRC[1],[hb,hf]=hairL(c.h,hc);
+ return`<svg viewBox="0 0 100 100" width="${n}" height="${n}" style="display:block;border-radius:50%;background:${BGC[c.bg]||BGC[0]}">${hb}<path d="M10 100c2-18 18-26 40-26s38 8 40 26z" fill="${OUTC[c.t]||OUTC[0]}"/><rect x="43" y="64" width="14" height="14" rx="5" fill="${shade(sk,-.1)}"/><circle cx="29" cy="48" r="4" fill="${sk}"/><circle cx="71" cy="48" r="4" fill="${sk}"/><ellipse cx="50" cy="46" rx="21" ry="24" fill="${sk}"/><circle cx="35" cy="54" r="3.2" fill="#ff7a8a" opacity=".22"/><circle cx="65" cy="54" r="3.2" fill="#ff7a8a" opacity=".22"/>${beardL(c.b,hc)}${MOUTH[c.m]||MOUTH[0]}${EYES[c.e]||EYES[0]}${GLASS[c.g]||''}${hf}</svg>`}
+const avCfg=()=>S.set.av&&typeof S.set.av==='object'&&'s' in S.set.av?S.set.av:AV0;
+function avatarHtml(raw,n){let c=null;if(raw&&typeof raw==='object'&&'s' in raw)c=raw;else if(typeof raw==='string'&&raw){try{const j=JSON.parse(raw);if(j&&typeof j==='object')c=j}catch(e){return`<div class="av" style="width:${n}px;height:${n}px;font-size:${Math.round(n*.52)}px;background:#e5e5ea">${esc(raw)}</div>`}}
+ return avSvg(c||AV0,n)}
+const AVCATS=[['s','Skin','c',SKIN],['h','Hair','n',10],['hc','Hair colour','c',HAIRC],['e','Eyes','n',4],['m','Mouth','n',4],['g','Glasses','n',4],['b','Beard','n',4],['t','Outfit','c',OUTC],['bg','Background','c',BGC]];
+function avatarEditor(cur,cb){let c={...AV0,...cur},cat=0;const rnd=n=>Math.floor(Math.random()*n);
+ const o=ov('<h3 class="at">Customize avatar</h3><div id="avp" style="display:grid;place-items:center;margin:4px 0 10px"></div><div class="avtabs" id="avt"></div><div class="avopts" id="avo"></div><div class="tbt"><button class="btn g" data-r>🎲 Random</button><button class="btn" data-ok>Done</button></div><button class="btn g" data-x>Cancel</button>');
+ const draw=()=>{o.querySelector('#avp').innerHTML=avSvg(c,112);
+  o.querySelector('#avt').innerHTML=AVCATS.map((x,i)=>`<button class="${i===cat?'on':''}" data-t="${i}">${x[1]}</button>`).join('');
+  const k=AVCATS[cat][0],type=AVCATS[cat][2],arr=AVCATS[cat][3];
+  o.querySelector('#avo').innerHTML=type==='c'?arr.map((col,i)=>`<button class="avc ${c[k]===i?'on':''}" data-i="${i}" style="background:${col}" aria-label="Colour ${i+1}"></button>`).join(''):Array.from({length:arr},(_,i)=>`<button class="avs ${c[k]===i?'on':''}" data-i="${i}">${avSvg({...c,[k]:i},54)}</button>`).join('');
+  o.querySelectorAll('#avt [data-t]').forEach(b=>b.onclick=()=>{cat=+b.dataset.t;draw()});
+  o.querySelectorAll('#avo [data-i]').forEach(b=>b.onclick=()=>{c[k]=+b.dataset.i;draw()})};draw();
+ o.querySelector('[data-r]').onclick=()=>{c={s:rnd(6),h:rnd(10),hc:rnd(8),e:rnd(4),m:rnd(4),g:rnd(4)>1?0:rnd(4),b:rnd(5)>2?rnd(4):0,t:rnd(8),bg:rnd(8)};draw()};
+ o.querySelector('[data-x]').onclick=()=>o.remove();o.querySelector('[data-ok]').onclick=()=>{o.remove();cb(c)}}
+function editProfile(){let av={...avCfg()};
+ const o=ov(`<h3 class="at">Edit profile</h3><div id="epv" style="display:grid;place-items:center;margin:6px 0 8px"></div><button class="btn g" data-av style="display:block;width:auto;margin:0 auto 4px;padding:10px 18px">Customize avatar</button><label>Username</label><input type="text" id="pun" maxlength="20" placeholder="Shown to friends" value="${esc(S.set.uname||'')}"><label>Quote</label><input type="text" id="pq" maxlength="80" placeholder="Something that keeps you going" value="${esc(S.set.quote||'')}"><div class="tbt"><button class="btn g" data-x>Cancel</button><button class="btn" data-ok>Save</button></div>`);
+ const draw=()=>o.querySelector('#epv').innerHTML=avSvg(av,96);draw();
+ o.querySelector('[data-av]').onclick=()=>avatarEditor(av,c=>{av=c;draw()});
+ o.querySelector('[data-x]').onclick=()=>o.remove();
+ o.querySelector('[data-ok]').onclick=()=>{S.set.uname=o.querySelector('#pun').value.trim();S.set.quote=o.querySelector('#pq').value.trim();S.set.av=av;save();o.remove();render();pushProfile();toast('Profile saved')}}
+const PL=['code,name,avatar,quote','code,name,avatar','code,name'];let PLV=0;
+async function pushProfile(){if(!A)return;for(let lv=PLV;lv<3;lv++){const b={};if(S.set.uname)b.name=S.set.uname;if(lv<=1)b.avatar=JSON.stringify(avCfg());if(lv===0)b.quote=S.set.quote||'';if(!Object.keys(b).length)return;
+  const w=await fReq('/rest/v1/profiles?user_id=eq.'+A.uid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(b)});if(w.ok){PLV=lv;return}}}
+async function loadFriends(msg,quiet){if(!A){FD={err:'login'};return render()}if(!quiet||!FD){FD={busy:1};render()}
+ let r;for(PLV=0;PLV<3;PLV++){r=await fReq('/rest/v1/profiles?select='+PL[PLV]+'&user_id=eq.'+A.uid);if(r.ok)break}
+ if(!r.ok){FD={err:'setup',status:r.s};return render()}
+ if(!r.j.length){for(let t=0;t<3;t++){const c=rcode(),b={user_id:A.uid,code:c,name:S.set.uname||('Friend '+c.slice(0,3))};if(PLV<=1)b.avatar=JSON.stringify(avCfg());if(PLV===0)b.quote=S.set.quote||'';
+  const w=await fReq('/rest/v1/profiles',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(b)});if(w.ok){r={ok:true,j:[b]};break}}}
+ if(!r.ok||!r.j.length){FD={err:'setup',status:r.s};return render()}
+ const me=r.j[0];if((S.set.uname&&me.name!==S.set.uname)||(PLV<=1&&me.avatar!==JSON.stringify(avCfg()))||(PLV===0&&(me.quote||'')!==(S.set.quote||'')))pushProfile();
+ const fr=await fReq('/rest/v1/friends?select=a,b,status'),rows=fr.ok?fr.j:[],ids=[...new Set(rows.flatMap(x=>[x.a,x.b]).filter(x=>x!==A.uid))],ppl={};let sh=[];
+ if(ids.length){const l='('+ids.join(',')+')',p=await fReq('/rest/v1/profiles?select=user_id,'+PL[PLV].replace('code,','')+'&user_id=in.'+l);if(p.ok)p.j.forEach(x=>ppl[x.user_id]=x);const s2=await fReq('/rest/v1/shared?select=*&user_id=in.'+l);if(s2.ok)sh=s2.j}
+ FD={me,rows,ppl,sh,flash:msg||''};render()}
+const GEAR='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+function friendsSection(){const d=FD,box=(t,m)=>`<div class="grp"><div class="frow" style="display:block"><div class="lb">${t}</div><div class="hint">${m}</div></div></div>`;
+ if(!d||d.busy)return'<div class="sec">Friends</div><div class="empty" style="padding:24px 10px">Loading…</div>';
+ if(d.err==='setup')return'<div class="sec">Friends</div>'+box('Friends are not set up yet','Run supabase-all.sql in Supabase once, then <a data-fr="1">refresh</a>.'+(d.status?' (error '+d.status+')':''));
+ const me=A.uid,inc=d.rows.filter(x=>x.b===me&&x.status==='pending'),acc=d.rows.filter(x=>x.status==='accepted'),out=d.rows.filter(x=>x.a===me&&x.status==='pending'),P=id=>d.ppl[id]||{},nm=id=>esc(P(id).name||'Friend'),
+ who=id=>`<span class="fwho">${avatarHtml(P(id).avatar,40)}<span class="ft"><span class="lb">${nm(id)}</span>${P(id).quote?`<span class="fq">“${esc(P(id).quote)}”</span>`:''}</span></span>`;
+ return(d.flash?`<div class="tip" style="color:var(--ink)">${esc(d.flash)}</div>`:'')+`<div class="sec">Add a friend</div><div class="grp"><div class="frow"><input type="text" id="fcode" maxlength="8" placeholder="Friend code" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em"><button class="btn" data-fa="1" style="padding:11px 16px">Add</button></div><div class="hint" id="fmsg" style="padding:0 16px 12px;margin:0;display:none"></div><div class="frow" style="min-height:48px"><span class="hint" style="margin:0">Your code <b style="letter-spacing:.12em;color:var(--ink)">${esc(d.me.code)}</b></span><a data-cc="1">Copy</a></div></div>
+ ${inc.length?`<div class="sec">Requests for you</div><div class="grp">${inc.map(x=>`<div class="frow">${who(x.a)}<span><a data-ok="${x.a}">Accept</a> &nbsp; <a data-no="${x.a}" style="color:#ff3b30">Decline</a></span></div>`).join('')}</div>`:''}
+ ${out.length?`<div class="sec">Sent requests</div><div class="grp">${out.map(x=>`<div class="frow">${who(x.b)}<span><span class="hint" style="margin:0">Waiting</span> &nbsp; <a data-rq="${x.b}" style="color:#ff3b30">Cancel</a></span></div>`).join('')}</div>`:''}
+ <div class="sec">Friends · ${acc.length} <a data-fr="1" style="text-transform:none;letter-spacing:0;font-size:13px;margin-left:8px">Refresh</a></div>${acc.length?acc.map(x=>{const id=x.a===me?x.b:x.a,hs=d.sh.filter(s=>s.user_id===id);return`<div class="grp" style="margin-bottom:12px"><div class="frow">${who(id)}<a data-rf="${id}" style="color:#ff3b30">Remove</a></div>${hs.length?hs.map(s=>`<div class="frow" style="min-height:46px"><span>${esc(s.emoji||'⭐')} ${esc(s.name)}</span><span class="hint" style="margin:0">${s.type==='avoid'?'🛡️ '+s.streak+' clean':'🔥 '+s.streak}${s.done_today?' · ✓ today':''}</span></div>`).join(''):'<div class="frow"><span class="hint" style="margin:0">No shared habits yet.</span></div>'}</div>`}).join(''):'<div class="empty" style="padding:26px 10px">No friends yet. Add one with their code.</div>'}
  <p class="hint" style="margin:14px 16px">Turn on "Share with friends" when you edit a habit to let friends see its streak.</p>`}
-async function frClick(g,q){
- if(q('data-fb')){FV=false;return render()}
- if(q('data-fr'))return loadFriends();
- if(q('data-cc')){try{await navigator.clipboard.writeText(FD.me.code);toast('Code copied')}catch(e){toast('Code: '+FD.me.code)}return}
- if(q('data-sn')){const n=$('#fname').value.trim()||FD.me.name,r=await fReq('/rest/v1/profiles?user_id=eq.'+A.uid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({name:n})});toast(r.ok?'Name saved':'Could not save');if(r.ok)FD.me.name=n;return}
- if(q('data-fa')){const c=$('#fcode').value.trim().toUpperCase();if(c.length<6)return toast('Enter the full code');
-  const p=await fReq('/rest/v1/profiles?select=user_id,name&code=eq.'+c);if(!p.ok||!p.j.length)return toast('No one has that code');const f=p.j[0];if(f.user_id===A.uid)return toast('That is your own code');
-  if(FD.rows.some(x=>(x.a===A.uid&&x.b===f.user_id)||(x.b===A.uid&&x.a===f.user_id)))return toast('Already added or pending');
-  const r=await fReq('/rest/v1/friends',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({a:A.uid,b:f.user_id,status:'pending'})});toast(r.ok?'Request sent':'Could not send request');return loadFriends()}
- if(q('data-ok')){await fReq('/rest/v1/friends?a=eq.'+q('data-ok')+'&b=eq.'+A.uid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status:'accepted'})});return loadFriends()}
- if(q('data-no')){await fReq('/rest/v1/friends?a=eq.'+q('data-no')+'&b=eq.'+A.uid,{method:'DELETE'});return loadFriends()}
- if(q('data-rf')){const id=q('data-rf');return ask('Remove friend?','You will stop seeing each other’s streaks.','Remove',async()=>{await fReq('/rest/v1/friends?or=(and(a.eq.'+A.uid+',b.eq.'+id+'),and(a.eq.'+id+',b.eq.'+A.uid+'))',{method:'DELETE'});loadFriends()})}}
+function profileView(){const n=S.set.uname||(A?'Add your name':'Your name'),q=S.set.quote||'',xp=xpInfo(),best=S.habits.reduce((m,h)=>Math.max(m,streak(h)[0]),0),fr=FD&&FD.rows?FD.rows.filter(x=>x.status==='accepted').length:0;
+ return`<div class="phd"><div class="pnm">${esc(n)}</div><button class="gb" data-gear="1" aria-label="Settings">${GEAR}</button></div>
+ <div class="pro"><div class="pav">${avSvg(avCfg(),92)}</div><div class="pst"><div><b>${xp.lv}</b><span>Level</span></div><div><b>${fr}</b><span>Friends</span></div><div><b>${best}</b><span>Best streak</span></div></div></div>
+ <div class="pq">${q?'“'+esc(q)+'”':'<span class="hint" style="margin:0">Add a quote so friends see what keeps you going.</span>'}</div>
+ <div class="pbtn"><button class="btn g" data-pe="1">Edit profile</button>${A?'':'<button class="btn" data-gear="1">Log in</button>'}</div>
+ ${A?friendsSection():'<div class="grp"><div class="frow" style="display:block"><div class="lb">Add friends</div><div class="hint">Log in from Settings (the gear) to add friends and back up your habits.</div></div></div>'}`}
+function fmsg(t,bad){const m=$('#fmsg');if(m){m.style.display='block';m.style.color=bad?'#ff3b30':'var(--ink)';m.textContent=t}toast(t)}
+async function frClick(g,q){try{await frInner(g,q)}catch(e){fmsg('Something went wrong: '+(e&&e.message||e),1)}}
+async function frInner(g,q){
+ if(q('data-gear')){SV=true;return render()}
+ if(q('data-pe'))return editProfile();
+ if(q('data-fr'))return loadFriends(null,true);
+ if(q('data-cc')){try{await navigator.clipboard.writeText(FD.me.code);toast('Code copied')}catch(e){toast('Your code: '+FD.me.code)}return}
+ if(q('data-fa')){const btn=document.querySelector('[data-fa]'),inp=$('#fcode'),c=((inp&&inp.value)||'').trim().toUpperCase();
+  if(c.length<6)return fmsg('Enter the full friend code (8 characters).',1);
+  btn.disabled=true;btn.textContent='Adding…';
+  try{const p=await fReq('/rest/v1/profiles?select=user_id,name&code=eq.'+encodeURIComponent(c));
+   if(!p.ok)return fmsg(p.j==='net'?'No connection. Try again.':'Could not look that code up (error '+p.s+'). Check the friends SQL was run.',1);
+   if(!p.j.length)return fmsg('No one has that code. Ask your friend to open the Profile tab once so their code is created.',1);
+   const f=p.j[0];if(f.user_id===A.uid)return fmsg('That is your own code.',1);
+   if(FD.rows.some(x=>(x.a===A.uid&&x.b===f.user_id)||(x.b===A.uid&&x.a===f.user_id)))return fmsg('You already added this person, or a request is waiting.',1);
+   const r=await fReq('/rest/v1/friends',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({a:A.uid,b:f.user_id,status:'pending'})});
+   if(!r.ok)return fmsg('Could not send the request (error '+r.s+').',1);
+   toast('Request sent');return loadFriends('Request sent to '+(f.name||'your friend')+'. They need to open their Profile tab and accept it.',true)}
+  finally{btn.disabled=false;btn.textContent='Add'}}
+ if(q('data-ok')){await fReq('/rest/v1/friends?a=eq.'+q('data-ok')+'&b=eq.'+A.uid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status:'accepted'})});return loadFriends('Friend added.',true)}
+ if(q('data-no')){await fReq('/rest/v1/friends?a=eq.'+q('data-no')+'&b=eq.'+A.uid,{method:'DELETE'});return loadFriends(null,true)}
+ if(q('data-rq')){await fReq('/rest/v1/friends?a=eq.'+A.uid+'&b=eq.'+q('data-rq'),{method:'DELETE'});return loadFriends('Request cancelled.',true)}
+ if(q('data-rf')){const id=q('data-rf');return ask('Remove friend?','You will stop seeing each other’s streaks.','Remove',async()=>{await fReq('/rest/v1/friends?or=(and(a.eq.'+A.uid+',b.eq.'+id+'),and(a.eq.'+id+',b.eq.'+A.uid+'))',{method:'DELETE'});loadFriends(null,true)})}}
 function tap(id,k){POP=id;buzz();const h=S.habits.find(x=>x.id===id),g=h.goal||1;if(h.type==='avoid'){const a=S.slip[k]||(S.slip[k]=[]),i=a.indexOf(id);i<0?a.push(id):a.splice(i,1);if(!a.length)delete S.slip[k];save();return render()}if(h.type==='timed'&&!done(h,k))return timerSheet(h,k);if(g<2)return toggle(id,k);const c=S.cnt[k]||(S.cnt[k]={});let n=(c[id]||0)+1;if(n>g)n=0;n?c[id]=n:delete c[id];if(!Object.keys(c).length)delete S.cnt[k];const a=S.log[k]||(S.log[k]=[]),i=a.indexOf(id);if(n>=g&&i<0)a.push(id);if(n<g&&i>=0)a.splice(i,1);if(!a.length)delete S.log[k];save();render()}
 function wk(){const t=[0,0,0,0,0,0,0],d=[0,0,0,0,0,0,0];S.habits.forEach(h=>{for(let i=0;i<90;i++){const x=day(-i);if(sched(h,x)){t[x.getDay()]++;if(done(h,key(x)))d[x.getDay()]++}}});
  return`<p class="sub" style="margin-top:18px">Best days (last 90 days)</p><div class="wk">${t.map((n,i)=>`<div><i style="height:${n?Math.round(d[i]/n*80):0}%"></i><span>${DN[i]}</span></div>`).join('')}</div>`}
@@ -538,9 +623,9 @@ function enhance(root){
 }
 function render(){theme();
  const IC=['<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>','<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>','<path d="M5 20V11M12 20V4M19 20v-6"/>','<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'];
- const tabs=[['today','Today',IC[0]],['week','Week',IC[1]],['wo','Workout','<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>'],['stats','Stats',IC[2]],['set','Settings',IC[3]]];
+ const tabs=[['today','Today',IC[0]],['week','Week',IC[1]],['wo','Workout','<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>'],['stats','Stats',IC[2]],['set','Profile','<circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4.5-6 8-6s7 2 8 6"/>']];
  $('#nav').innerHTML=tabs.map(([k,l,ic])=>`<button class="${tab===k?'on':''}" data-t="${k}"><svg viewBox="0 0 24 24">${ic}</svg>${l}</button>`).join('');
- $('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;edit=null;off=0;wview=null;FV=false;render()}};
+ $('#nav').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;edit=null;off=0;wview=null;SV=false;render();if(t==='set'&&A)loadFriends(null,true)}};
  const v=$('#v');
  const keep=LT===tab&&!edit,top=v.scrollTop;
  if(edit){v.innerHTML='<div class="pg nar">'+form()+'</div>';enhance(v);bindForm();return}
@@ -571,11 +656,11 @@ function stats(){if(!S.habits.length)return'<h1>Stats</h1><div class="empty">Not
  ${wk()}${bdg()}${nts()}<div style="height:16px"></div>
  <div class="g2">${S.habits.map(h=>{const[s,b]=streak(h);return`<div class="row" style="--c:${h.color};display:block"><div style="display:flex;gap:10px;align-items:center"><span style="font-size:20px">${esc(h.emoji)}</span><b class="grow nm">${esc(h.name)}</b><span class="st">🔥${s} · best ${b}</span></div>
  <div class="heat">${[...Array(45)].map((_,i)=>{const d=day(i-44),k=key(d);return`<i class="${done(h,k)?'on':sched(h,d)?'':'na'}"></i>`}).join('')}</div></div>`}).join('')}</div>`}
-function settings(){if(FV)return friendsView();const s=S.set,opt=(id,v,list)=>`<select id="${id}">${list.map(([x,l])=>`<option value="${x}" ${String(v)===String(x)?'selected':''}>${l}</option>`).join('')}</select>`;
+function settings(){if(!SV)return profileView();const s=S.set,opt=(id,v,list)=>`<select id="${id}">${list.map(([x,l])=>`<option value="${x}" ${String(v)===String(x)?'selected':''}>${l}</option>`).join('')}</select>`;
  const nOn=!!(window.Capacitor||('Notification'in window&&Notification.permission==='granted'));
- return`<h1>Settings</h1><p class="sub">Saved on this device, and in your account when you log in.</p>
+ return`<p class="sub" style="margin:8px 4px 0"><a data-sb="1">‹ Profile</a></p><h1>Settings</h1><p class="sub">Saved on this device, and in your account when you log in.</p>
  ${acct()}
- <div class="sec">Friends</div><div class="grp"><button class="link" id="frd">Friends and shared habits ›</button></div>
+ 
  <div class="sec">Appearance</div><div class="grp">
   <div class="frow"><span class="lb">Style</span>${opt('sk',s.skin,Object.entries(SKN).map(([k,v])=>[k,v.n]))}</div>
   <div class="frow"><span class="lb">Theme</span>${opt('th',s.theme,[['auto','Automatic'],['light','Light'],['dark','Dark']])}</div>
@@ -595,7 +680,7 @@ function settings(){if(FV)return friendsView();const s=S.set,opt=(id,v,list)=>`<
  <div class="sec">Workouts</div><div class="grp"><div class="frow"><span class="lb">Weight unit</span>${opt('un',s.unit,[['kg','Kilograms'],['lb','Pounds']])}</div><div class="frow"><span class="lb">Rest timer</span>${opt('rst',+s.rest,[[0,'Off'],[30,'30 sec'],[60,'60 sec'],[90,'90 sec'],[120,'2 min'],[180,'3 min']])}</div></div>
  ${inst()}
  <div class="sec">Data</div><div class="grp">
-  <button class="link" id="obr">Replay intro</button>
+  ${PV()}<button class="link" id="obr">Replay intro</button>
   <button class="link" id="ex">Export backup</button>
   <button class="link" id="im">Import backup</button>
   <input type="file" id="fi" accept=".json" hidden>
@@ -627,10 +712,11 @@ function bindForm(){const h=edit;
   const o={id:h.id,name:h.name.trim(),emoji:h.emoji||'⭐',color:h.color,days:h.days,created:h.created,cat:h.cat,goal:(h.type==='avoid'||h.type==='timed')?1:h.goal,type:h.type||'build',mins:h.mins||10,share:!!h.share,rts:rts(h)};
   h.isNew?S.habits.push(o):S.habits[S.habits.findIndex(x=>x.id===h.id)]=o;save();edit=null;render()};
  if($('#dl'))$('#dl').onclick=()=>{ask('Delete habit?','This habit and all its history will be removed.','Delete',()=>{S.habits=S.habits.filter(x=>x.id!==h.id);for(const k in S.log){S.log[k]=S.log[k].filter(i=>i!==h.id);if(!S.log[k].length)delete S.log[k]}save();edit=null;render()})}}
-function bind(){const v=$('#v');v.oninput=woInput;v.onpointerdown=dragStart;v.onpointermove=dragMove;v.onpointerup=v.onpointercancel=dragEnd;
+function bind(){const v=$('#v');v.oninput=woInput;v.onkeydown=e=>{if(tab==='set'&&!SV&&e.key==='Enter'&&e.target.id==='fcode')frClick(null,a=>a==='data-fa'?'1':null)};v.onpointerdown=dragStart;v.onpointermove=dragMove;v.onpointerup=v.onpointercancel=dragEnd;
  v.onclick=e=>{const t=e.target,g=a=>t.closest('['+a+']'),q=a=>g(a)&&g(a).getAttribute(a);
   if(tab==='wo')return woClick(g,q);
-  if(tab==='set'&&FV)return frClick(g,q);
+  if(tab==='set'&&!SV)return frClick(g,q);
+  if(q('data-sb')){SV=false;render();if(A)loadFriends(null,true);return}
   if(q('data-s'))skip(q('data-s'),1);
   else if(q('data-u'))skip(q('data-u'),0);
   else if(q('data-rest'))restDay();
@@ -642,13 +728,13 @@ function bind(){const v=$('#v');v.oninput=woInput;v.onpointerdown=dragStart;v.on
   else if(g('data-o')){e.preventDefault();off+=+q('data-o');render()}
   else if(q('data-a')){S.set.accent=q('data-a');save();render()}};
  if($('#nt'))$('#nt').oninput=e=>{const x=e.target.value,k=key(new Date());x?S.notes[k]=x:delete S.notes[k];save()};
- if(tab!=='set'||FV)return;
+ if(tab!=='set'||!SV)return;
  $('#th').onchange=e=>{S.set.theme=e.target.value;save();render()};
  if($('#li')){$('#li').onclick=()=>login('in');$('#su').onclick=()=>login('up')}
- if($('#sy')){$('#sy').onclick=()=>{msg='Syncing…';render();sync()};$('#lo').onclick=()=>{setA(null);msg='';render()}}
+ if($('#sy')){$('#sy').onclick=()=>{msg='Syncing…';render();sync()};$('#lo').onclick=()=>{setA(null);SYNCED=false;FD=null;msg='';render()}}
  if($('#in'))$('#in').onclick=async()=>{DEF.prompt();try{await DEF.userChoice}catch(e){}DEF=null;render()};
  $('#un').onchange=e=>{S.set.unit=e.target.value;save()};$('#rst').onchange=e=>{S.set.rest=+e.target.value;save()};
- $('#frd').onclick=()=>{FV=true;FD=null;render();loadFriends()};$('#lkb').onclick=lockSettings;$('#obr').onclick=onboard;
+ $('#lkb').onclick=lockSettings;$('#obr').onclick=onboard;if($('#rvp'))$('#rvp').onclick=restorePrev;
  $('#sk').onchange=e=>{S.set.skin=e.target.value;S.set.accent=SKN[e.target.value].a;save();render()};$('#tp').onchange=e=>{S.set.tip=+e.target.value;save()};
  $('#fo').onchange=e=>{S.set.font=e.target.value;save();theme()};$('#dn').onchange=e=>{S.set.dense=+e.target.value;save();theme()};$('#sr').onchange=e=>{S.set.start=e.target.value;save()};
  $('#nb').onclick=()=>{window.Capacitor?native().then(()=>toast('🔔 Reminders scheduled')):'Notification'in window?Notification.requestPermission().then(()=>render()):toast('Notifications are not supported here.')};
@@ -657,7 +743,7 @@ function bind(){const v=$('#v');v.oninput=woInput;v.onpointerdown=dragStart;v.on
  $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='habits-backup.json';a.click()};
  $('#im').onclick=()=>$('#fi').click();
  $('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.habits||!d.log)throw 0;S=fix(d);save();render()}catch(x){toast('That file is not a valid backup.')}};r.readAsText(f)};
- $('#rs').onclick=()=>ask('Erase all data?','Every habit, workout and note on this device will be deleted. Your account is not affected.','Erase everything',()=>{S=fix({habits:[],log:{},set:S.set});save();render()})}
+ $('#rs').onclick=()=>ask('Erase all data?',A?'Every habit, workout and note will be deleted from this device AND from your account. You can still restore it from this device afterwards.':'Every habit, workout and note on this device will be deleted.','Erase everything',()=>{snap('before erase',S);S=fix({habits:[],log:{},set:S.set});save();render()})}
 render();
 matchMedia('(prefers-color-scheme:dark)').onchange=theme;
 setInterval(remind,30000);document.addEventListener('visibilitychange',remind);remind();if(A)sync();checkBadges();if(LK())lockNow();if(!S.set.onb)onboard();
